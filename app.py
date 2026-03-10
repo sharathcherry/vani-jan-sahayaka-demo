@@ -689,19 +689,7 @@ def _render_sidebar() -> None:
                     unsafe_allow_html=True,
                 )
 
-        st.divider()
-        st.markdown("#### Environment")
-        masked_key = (
-            AZURE_SPEECH_KEY[:4] + "..." + AZURE_SPEECH_KEY[-4:]
-            if len(AZURE_SPEECH_KEY) >= 8 else ("set" if AZURE_SPEECH_KEY else "**NOT SET**")
-        )
-        st.caption(f"AZURE_SPEECH_KEY: `{masked_key}`")
-        st.caption(f"AZURE_SPEECH_REGION: `{AZURE_SPEECH_REGION}`")
-        st.caption(f"RAG_LAMBDA_NAME: `{RAG_LAMBDA_NAME}`")
-        st.caption(f"BEDROCK_REGION: `{BEDROCK_REGION}`")
-        st.caption(f"LAMBDA_REGION: `{LAMBDA_REGION}`")
-        ffmpeg_path = shutil.which("ffmpeg") or "**NOT FOUND**"
-        st.caption(f"ffmpeg: `{ffmpeg_path}`")
+
 
 
 # ── Streamlit page setup ───────────────────────────────────────────────────────

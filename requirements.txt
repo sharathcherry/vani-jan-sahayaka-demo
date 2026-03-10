@@ -1,0 +1,7 @@
+streamlit
+boto3
+httpx
+python-dotenv
+twilio
+qdrant-client
+openai

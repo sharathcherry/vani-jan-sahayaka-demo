@@ -602,8 +602,7 @@ def _diag_azure_stt() -> tuple[bool, str]:
         if resp.status_code == 403:
             return False, "403 Forbidden — key quota exhausted or subscription inactive"
         if resp.status_code == 200:
-            status = resp.json().get("RecognitionStatus", "?")
-            return True, f"OK (region={AZURE_SPEECH_REGION}, status={status})"
+            return True, "OK"
         return False, f"HTTP {resp.status_code}: {resp.text[:120]}"
     except Exception as e:
         return False, f"Connection error: {e}"
@@ -617,8 +616,7 @@ def _diag_bedrock() -> tuple[bool, str]:
             messages=[{"role": "user", "content": [{"text": "Hi"}]}],
             inferenceConfig={"temperature": 0.0, "maxTokens": 5},
         )
-        token_out = resp.get("usage", {}).get("outputTokens", "?")
-        return True, f"OK (region={BEDROCK_REGION}, outputTokens={token_out})"
+        return True, "OK"
     except Exception as e:
         return False, str(e)
 
@@ -637,11 +635,8 @@ def _diag_lambda() -> tuple[bool, str]:
         )
         result      = json.loads(response["Payload"].read())
         status_code = result.get("statusCode", "?")
-        body        = json.loads(result.get("body", "{}"))
-        n_chunks    = body.get("num_chunks", "?")
-        answer_head = body.get("answer", "")[:60]
         if status_code == 200:
-            return True, f"OK — {n_chunks} chunks | answer: \"{answer_head}...\""
+            return True, "OK"
         return False, f"Lambda returned {status_code}: {result.get('body','')[:200]}"
     except Exception as e:
         return False, str(e)
@@ -656,24 +651,26 @@ def _render_sidebar() -> None:
             "Run this to confirm the pipeline is actually connected."
         )
 
-        if st.button("Run Diagnostics", type="primary", use_container_width=True):
-            with st.spinner("Testing Azure Speech (STT/TTS)..."):
+        run_diagnostics = st.button("Run Diagnostics", type="primary", use_container_width=True)
+        if not st.session_state.get("_diagnostics_ran", False) or run_diagnostics:
+            st.session_state["_diagnostics_ran"] = True
+            with st.spinner("Testing Azure Speech..."):
                 ok, msg = _diag_azure_stt()
-            st.session_state["_diag_azure"] = (ok, msg)
+                st.session_state["_diag_azure"] = (ok, msg)
 
             with st.spinner("Testing Bedrock Nova Lite..."):
                 ok, msg = _diag_bedrock()
-            st.session_state["_diag_bedrock"] = (ok, msg)
+                st.session_state["_diag_bedrock"] = (ok, msg)
 
-            with st.spinner(f"Testing Lambda ({RAG_LAMBDA_NAME})..."):
+            with st.spinner("Testing Lambda..."):
                 ok, msg = _diag_lambda()
-            st.session_state["_diag_lambda"] = (ok, msg)
+                st.session_state["_diag_lambda"] = (ok, msg)
 
         # Show results if they exist
         for key, label in [
-            ("_diag_azure",   f"Azure Speech ({AZURE_SPEECH_REGION})"),
-            ("_diag_bedrock", f"Bedrock Nova Lite ({BEDROCK_REGION})"),
-            ("_diag_lambda",  f"Lambda ({RAG_LAMBDA_NAME})"),
+            ("_diag_azure",   "Azure Speech"),
+            ("_diag_bedrock", "Bedrock Nova Lite"),
+            ("_diag_lambda",  "Lambda"),
         ]:
             if key in st.session_state:
                 ok, msg = st.session_state[key]
@@ -688,7 +685,6 @@ def _render_sidebar() -> None:
                     f"</div>",
                     unsafe_allow_html=True,
                 )
-
 
 
 
